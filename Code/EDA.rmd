@@ -1,0 +1,40 @@
+---
+title: "Homework 6"
+author: "Gao qiuxin"
+date: "2021/12/27"
+output:
+  word_document: default
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r load_package}
+library(VGAM)
+library(cdabookdb)
+library(cdabookfunc)
+library(tidyr)
+library(openxlsx)
+library(stringr)
+data0 = read.csv('D://Study//senior 1//other//new1.csv')
+```
+
+
+
+```{r}
+Y = data0["comment_star"]
+factorY = factor(c(t(Y)))
+orderY = ordered(factorY, labels=c("e","ee","eee","eeee","eeeee"))
+col_list = c(colnames(data))
+
+fit_order = vglm(orderY ~ review_count + BikeParking + RestaurantsReservations + HasTV + RestaurantsGoodForGroups + WiFi + garage + street + lot + valet + dinner + Total_hour + acceptable_noise + upscale_classy,family = cumulative(parallel = TRUE),data = data0)
+summary(fit_order)
+```
+```{r}
+predict(fit_order,data0,type = 'response')
+
+```
+
