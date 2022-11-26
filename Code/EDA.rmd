@@ -1,7 +1,7 @@
 ---
-title: "Homework 6"
-author: "Gao qiuxin"
-date: "2021/12/27"
+title: "EDA"
+author: "Yuqian Chen"
+date: "2022/11/22"
 output:
   word_document: default
   pdf_document: default
