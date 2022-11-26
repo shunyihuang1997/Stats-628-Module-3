@@ -1,0 +1,122 @@
+---
+title: "EDA"
+author: "Yuqian Chen"
+date: "2022-11-26"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+````{r}
+library(VGAM)
+library(cdabookdb)
+library(cdabookfunc)
+library(tidyr)
+#library(openxlsx)
+library(stringr)
+library(splitTools)
+
+data = read.csv("final_data.csv")
+```
+
+
+```{r}
+Y = data["comment_star"]
+factorY = factor(c(t(Y)))
+data$OrderStar = ordered(factorY,labels=c("1","2","3","4","5"))
+col_list = c(colnames(data))
+data[,c(6:16,18,19)] <- lapply(data[,c(6:16,18,19)], factor)
+```
+
+```{r 80%}
+train.rows <- sample(rownames(data), dim(data)[1]*0.8)
+train <- data[train.rows,]
+
+test.rows <- sample(rownames(data), dim(data)[1]*0.2)
+test <- data[test.rows,]
+```
+
+
+```{r m1}
+m1 = vglm(OrderStar ~ BikeParking + RestaurantsReservations + HasTV + RestaurantsGoodForGroups + WiFi + garage + street + lot + valet + dinner + Total_hour + acceptable_noise + upscale_classy,family = cumulative(parallel = TRUE),data = train)
+summary(m1)
+anova(m1,test = "LRT")
+```
+```{r}
+X2 <- sum(resid(m1, type = "pearson") ^ 2)
+x2_pvalue <- 1- pchisq(X2, 42791)
+c(X2 = X2, pvalue = x2_pvalue)
+```
+
+```{r m2}
+m2 = vglm(OrderStar ~  BikeParking 
+          #+ RestaurantsReservations 
+          #+ HasTV 
+          + RestaurantsGoodForGroups 
+          + WiFi 
+          + garage 
+          + street 
+          + valet 
+          #+ dinner 
+          + Total_hour 
+          + acceptable_noise 
+          + upscale_classy,family = cumulative(parallel = TRUE),data = train)
+summary(m2)
+#anova(m2,test = "LRT")
+```
+```{r}
+X2 <- sum(resid(m2, type = "pearson") ^ 2)
+x2_pvalue <- 1- pchisq(X2, 42795)
+c(X2 = X2, pvalue = x2_pvalue)
+```
+
+```{r m1 vs m2}
+anova(m1,m2,type = 'I')
+```
+
+```{r m3}
+m3 = vglm(OrderStar ~  BikeParking 
+          #+ RestaurantsReservations 
+          #+ HasTV 
+          + RestaurantsGoodForGroups 
+          + WiFi 
+          + garage 
+          #+ street 
+          + valet 
+          #+ dinner 
+          + Total_hour 
+          + acceptable_noise 
+          + upscale_classy,family = cumulative(parallel = TRUE),data = train)
+summary(m3)
+
+X2 <- sum(resid(m3, type = "pearson") ^ 2)
+x2_pvalue <- 1- pchisq(X2, 42796)
+c(X2 = X2, pvalue = x2_pvalue)
+```
+
+
+
+
+```{r}
+pred <- predict(m,test,type = "response")
+```
+
+
+
+
+
+
+
+
+
+
+
+```{r}
+predict(fit_order,test,type = 'response')
+
+```
+
+
+
