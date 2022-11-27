@@ -95,12 +95,59 @@ X2 <- sum(resid(m3, type = "pearson") ^ 2)
 x2_pvalue <- 1- pchisq(X2, 42796)
 c(X2 = X2, pvalue = x2_pvalue)
 ```
+```{r accuracy}
+pred_prob11<- predict(m3, type = "response", newdata = test )
+#pred_type11 <- cut(
+#pred_prob11, breaks = c(0, 0.62, 1), labels = 0:1,
+#include.lowest = TRUE
+#)
+#table(test1$churn, pred_type11)
 
+predict.results1 <-as.numeric( colnames(pred_prob11)[apply(pred_prob11,1,which.max)])
+
+misClasificError <- mean(predict.results1 != test$comment_star)
+print(paste('Accuracy',1-misClasificError))
+```
 
 
 
 ```{r}
-pred <- predict(m,test,type = "response")
+pred <- predict(m3,test,type = "response")
+```
+
+```{r}
+predict_model = function(OrderStar,comment_star,BikeParking,RestaurantsGoodForGroups, WiFi,garage,valet,Total_hour,acceptable_noise,upscale_classy){
+  columns = c('OrderStar','comment_star','BikeParking','RestaurantsGoodForGroups','WiFi','garage','valet','Total_hour','acceptable_noise','upscale_classy')
+  test_df = data.frame(matrix(nrow = 0, ncol = length(columns)))
+  colnames(test_df) = columns
+  
+  new_row = list('OrderStar' = OrderStar, 'comment_star' = comment_star, 'BikeParking' = BikeParking,'RestaurantsGoodForGroups' = RestaurantsGoodForGroups,'WiFi' = WiFi,
+            'garage' = garage,'valet' = valet,
+            'Total_hour' = Total_hour,'acceptable_noise' = acceptable_noise,
+            'upscale_classy' = upscale_classy)
+  
+  test_df = rbind(test_df,new_row)
+  test_df$OrderStar = as.factor(test_df$OrderStar)
+  test_df$BikeParking = as.factor(test_df$BikeParking)
+  test_df$RestaurantsGoodForGroups = as.factor(test_df$RestaurantsGoodForGroups)
+  test_df$WiFi = as.factor(test_df$WiFi)
+  test_df$garage = as.factor(test_df$garage)
+  test_df$valet = as.factor(test_df$valet)
+  test_df$acceptable_noise = as.factor(test_df$acceptable_noise)
+  test_df$upscale_classy = as.factor(test_df$upscale_classy)
+  
+  pred <- predict(m3,test_df,type = "response")
+  pie.prop <- as.vector(pred)
+  pie.labels <- c("1 star","2 star", "3 star", "4 star","5 star")
+  pie.labels <- paste(pie.labels," ",round(pie.prop,2) , sep="")
+  library(RColorBrewer)
+  return(pie(pie.prop, pie.labels, col=brewer.pal(5, "RdYlGn")))
+  return(pred)
+}
+
+
+pred = predict_model(4,4,1,1,1,1,1,55,1,1)
+
 ```
 
 
@@ -111,12 +158,6 @@ pred <- predict(m,test,type = "response")
 
 
 
-
-
-```{r}
-predict(fit_order,test,type = 'response')
-
-```
 
 
 
