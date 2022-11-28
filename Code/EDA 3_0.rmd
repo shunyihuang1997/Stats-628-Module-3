@@ -1,0 +1,134 @@
+---
+title: "EDA 3_0"
+author: "Yuqian Chen"
+date: "2022-11-27"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+````{r}
+library(VGAM)
+library(cdabookdb)
+library(cdabookfunc)
+library(tidyr)
+#library(openxlsx)
+library(stringr)
+library(splitTools)
+
+data = read.csv("final_data3000.csv")
+```
+
+
+```{r}
+Y = data["comment_star"]
+factorY = factor(c(t(Y)))
+data$OrderStar = ordered(factorY,labels=c("1","2","3","4","5"))
+col_list = c(colnames(data))
+data[,c(6:22,24:28)] <- lapply(data[,c(6:22,24:28)], factor)
+```
+
+```{r 90%}
+train.rows <- sample(rownames(data), dim(data)[1]*0.9)
+train <- data[train.rows,]
+
+test.rows <- sample(rownames(data), dim(data)[1]*0.1)
+test <- data[test.rows,]
+```
+
+
+```{r m1}
+m1 = vglm(OrderStar ~ BikeParking 
+          +  RestaurantsReservations 
+          + GoodForKids
+          + HasTV 
+          + Alcohol
+          + RestaurantsGoodForGroups + WiFi + garage + street + lot 
+          + latenight
+          + lunch
+          + dinner 
+          + breakfast
+          + Total_hour 
+          + hipster_trendy
+          + acceptable_noise + upscale_classy
+          + casual_env,
+          family = cumulative(parallel = TRUE),data = train)
+summary(m1)
+#anova(m1,test = "LRT")
+```
+```{r}
+X2 <- sum(resid(m1, type = "pearson") ^ 2)
+x2_pvalue <- 1- pchisq(X2, 33601)
+c(X2 = X2, pvalue = x2_pvalue)
+```
+
+```{r m2}
+m2 = vglm(OrderStar ~ BikeParking 
+          +  RestaurantsReservations 
+          + GoodForKids
+          #+ HasTV 
+          + Alcohol
+          #+ RestaurantsGoodForGroups 
+          #+ WiFi 
+          + garage + street + lot 
+          + latenight
+          + lunch
+          #+ dinner 
+          + breakfast
+          + Total_hour 
+          + hipster_trendy
+          #+ acceptable_noise 
+          + upscale_classy
+          + casual_env,
+          family = cumulative(parallel = FALSE),data = train)
+summary(m2)
+```
+
+```{r}
+X2 <- sum(resid(m2, type = "pearson") ^ 2)
+x2_pvalue <- 1- pchisq(X2, 33606)
+c(X2 = X2, pvalue = x2_pvalue)
+```
+```{r m1 vs m2}
+anova(m1, m2, type = "I")
+```
+```{r accuracy}
+pred_prob11<- predict(m2, type = "response", newdata = test )
+#pred_type11 <- cut(
+#pred_prob11, breaks = c(0, 0.62, 1), labels = 0:1,
+#include.lowest = TRUE
+#)
+#table(test1$churn, pred_type11)
+
+predict.results1 <-as.numeric( colnames(pred_prob11)[apply(pred_prob11,1,which.max)])
+
+misClasificError <- mean(predict.results1 != test$comment_star)
+print(paste('Accuracy',1-misClasificError))
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
