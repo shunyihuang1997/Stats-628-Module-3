@@ -21,6 +21,12 @@ library(reticulate)
 library(wordcloud2)
 library(wordcloud)
 library(RColorBrewer)
+# py_pack = c('pandas', 'numpy','matplotlib','collections','plotly','tqdm','seaborn','nltk')
+# for (pack in py_pack){
+#   py_install(pack)
+# }
+
+#py_install("pandas")
 #source_python("./app.py")
 #use_condaenv("base")
 
@@ -191,10 +197,8 @@ pio.write_html(fig, file = 'parking.html', auto_open = True)
 ```
 
 
-
-
 ```{python}
-#Plot for TFIDF score
+#Generate food list
 Chinese_food_list = ['Almond milk', 'Ants Climbing a Tree','Asian pear','Baby bok choy','Baijiu','Beef brisket',"Beggar's Chicken",'Bingtang hulu','Bitter melon','Bubble tea',
 "Buddha's Delight","Cantonese roast duck",'Century egg', 'thousand-year egg','Cha siu', 'Cantonese roast pork','Char kway teow',
 'Chicken feet','Chinese sausage','Chow mein','Chrysanthemum tea','Claypot rice','Congee','Conpoy (dried scallops)','Crab rangoon','Dan Dan noodles',
@@ -210,15 +214,44 @@ Chinese_food_list = ['Almond milk', 'Ants Climbing a Tree','Asian pear','Baby bo
 'Twice-cooked pork','Water chestnut cake', 'mati gau','Wonton noodle soup','Wood ear',
 'Xiaolongbao,' 'soup dumplings','Yuanyang','Yunnan goat cheese']
 
+
+Japanese_food_list = ['sushi', 'ramen', 'udon', 'matcha', 'sashimi', 'tempura', 'unagi', 'wagyu', 'kushiyaki', 'yakitori', 'takoyaki', 'tofu', 'miso', 'kaisendon', 'donburi', 'chirashizushi',
+'eel', 'unagi', 'anago', 'zuke', 'tako tamago', 'fukagawa', 'fugu', 'crab', 'okonomiyaki', 'oysters', 'gyoza', 'karaage', 'Japanese curry', 'croquette', 'korokke', 'yakiniku', 'tonkatsu'
+, 'miso katsu', 'motsunabe', 'jingisukan', 'basashi', 'sakuraniku', 'dashi', 'tebasaki', 'doteni', 'kishimen', 'tsukemen', 'kakuni manju', 'champon', 'chawanmushi', 'konnyaku', 'tamagoyaki',
+'odon', 'nabemono', 'onigiri', 'monjayaki', 'okonomiyaki', 'TKG', 'yakiniku', 'kaiseki','mochi', 'castella', 'sake', 'shabu shabu', 'miso Soup', 'soba', 'gyudon', 'natto','kashipan', 'sukiyaki',
+'mentaiko', 'nikujaga', 'edamame', 'yakisoba','wagashi']
+
+
+Korean_food_list = ['bibimbap', 'gimbap', 'tteokguk', 'japchae', 'ramyun', 'naengmyeon', 'haemul pajeon', 'godeungo jorim', 'ganjang gejang', 'nakji bokkeum', 'hotteok', 'tteokbokki',
+'kimchi', 'samgyetang', 'sundubu jjigae', 'gamjatang', 'budae jjigae', 'army stew', 'galbijjim', 'bulgogi', 'samgyeopsal','Korean fried chicken', 'bossam', 'soondae', 'bingsu', 'sikhye', 'banchan',
+'maekju','chueotang', 'gogigui', 'Korean BBQ', 'gomtang', 'jajangmyeon', 'jjukumi', 'kalguksu', 'makgeolli', 'mandu', 'naengmyeon', 'gochujang', 'octopus', 'squid', 'nakji bokkeum', 'ojingeo bokkeum',
+'jeon', 'haemul pajeon', 'sannakji', 'seolnongtang', 'beongdegi', 'bindaetteok', 'fishcake', 'eomuk', 'odeng', 'tteokbokki', 'gyeranppang', 'hotteok', 'soondae','twigim', 'tempura', 'ddongbbang',
+'dondurma', 'schnee pang', 'tornado potato']
+
+```
+
+
+
+
+```{python}
+#Plot for TFIDF score
 new_Chinese_food_list = []
-for word in Chinese_food_list:
+new_Japanese_food_list = []
+new_Korean_food_list = []
+
+def init_new_list (old_list, new_list):
+  for word in old_list:
     cur_word = word.split(' ')
     for i in cur_word:
-        new_Chinese_food_list.append(i)
+        new_list.append(i)
+
+init_new_list(Chinese_food_list, new_Chinese_food_list)
+init_new_list(Japanese_food_list, new_Japanese_food_list)
+init_new_list(Korean_food_list, new_Korean_food_list)
 
 
 
-def tfidf_viz(business_name, sentiment, num_gram, top_n, font, rotation):
+def tfidf_viz(business_name, sentiment, num_gram, top_n, font, rotation, category):
   spec_restaurant = CA_Asian_business_review[CA_Asian_business_review['name'] == business_name]
   spec_sent = spec_restaurant[spec_restaurant['sentiment'] == sentiment]
   
@@ -233,11 +266,21 @@ def tfidf_viz(business_name, sentiment, num_gram, top_n, font, rotation):
   temp_df = temp_df[temp_df['TF-IDF'] > 0].reset_index()
   temp_df = temp_df.rename(columns= {'index':'text'})
   
+  if category ==  'Chinese':
+    cur_list =new_Chinese_food_list
+  elif category == 'Japanese':
+    cur_list =new_Japanese_food_list
+  elif category == 'Korean':
+    cur_list =new_Korean_food_list
+  else:
+    cur_list = new_Chinese_food_list+new_Japanese_food_list+new_Korean_food_list
+  
+  
   index_list = []
   for i in range(len(temp_df)):
       word = temp_df.loc[i,'text']
       cur_word = word.split(' ')
-      if not any(elem in elem in new_Chinese_food_list for elem in cur_word):
+      if not any(elem in elem in cur_list for elem in cur_word):
           index_list.append(i)
   
   temp_df.drop(index_list,axis = 0, inplace=True)
@@ -252,8 +295,116 @@ def tfidf_viz(business_name, sentiment, num_gram, top_n, font, rotation):
 ```
 
 
-```{python}
-CA_Asian_business_review[CA_Asian_business_review[']]
+
+
+
+```{r}
+#Modeling
+library(VGAM)
+library(cdabookdb)
+library(cdabookfunc)
+library(tidyr)
+#library(openxlsx)
+library(stringr)
+library(splitTools)
+library(RColorBrewer)
+data = read.csv("final_data.csv")
+
+Y = data["comment_star"]
+factorY = factor(c(t(Y)))
+data$OrderStar = ordered(factorY,labels=c("1","2","3","4","5"))
+col_list = c(colnames(data))
+data[,c(6:16,18,19)] <- lapply(data[,c(6:16,18,19)], factor)
+new_data = data[,c('OrderStar','comment_star','BikeParking','RestaurantsGoodForGroups','WiFi','garage','valet','street','Total_hour','acceptable_noise','upscale_classy')]
+
+train.rows <- sample(rownames(new_data), dim(new_data)[1]*0.8)
+train <- new_data[train.rows,]
+
+test.rows <- sample(rownames(new_data), dim(new_data)[1]*0.2)
+test <- new_data[test.rows,]
+
+model = vglm(OrderStar ~  BikeParking 
+          + RestaurantsGoodForGroups 
+          + WiFi 
+          + garage 
+          + valet 
+          + street
+          + Total_hour 
+          + acceptable_noise 
+          + upscale_classy,
+          family = cumulative(parallel = TRUE),data = train)
+
+```
+
+
+
+
+```{r}
+predict_model = function(BikeParking,RestaurantsGoodForGroups, WiFi,garage,valet, street,Total_hour,acceptable_noise,upscale_classy){
+  columns = c('OrderStar','comment_star','BikeParking','RestaurantsGoodForGroups','WiFi','garage','valet', 'street_parking','Total_hour','acceptable_noise','upscale_classy')
+  test_df = data.frame(matrix(nrow = 0, ncol = length(columns)))
+  colnames(test_df) = columns
+  
+
+  new_row = list('BikeParking' = BikeParking,'RestaurantsGoodForGroups' = RestaurantsGoodForGroups,'WiFi' = WiFi,
+            'garage' = garage,'valet' = valet, 'street_parking' = street,
+            'Total_hour' = Total_hour,'acceptable_noise' = acceptable_noise,
+            'upscale_classy' = upscale_classy)
+  
+  test_df = rbind(test_df,new_row)
+  test_df$BikeParking = as.factor(test_df$BikeParking)
+  test_df$RestaurantsGoodForGroups = as.factor(test_df$RestaurantsGoodForGroups)
+  test_df$WiFi = as.factor(test_df$WiFi)
+  test_df$garage = as.factor(test_df$garage)
+  test_df$valet = as.factor(test_df$valet)
+  test_df$street = as.factor(test_df$street)
+  test_df$acceptable_noise = as.factor(test_df$acceptable_noise)
+  test_df$upscale_classy = as.factor(test_df$upscale_classy)
+  
+  pred <- predict(model,test_df,type = "response")
+  pie.prop <- as.vector(pred)
+  pie.labels <- c("1 star","2 star", "3 star", "4 star","5 star")
+  pie.labels <- paste(pie.labels," ",round(pie.prop,2) , sep="")
+  
+  # print(paste0("The predicted probability of getting star 1 is:%", 100*round(pred[1],2)))
+  # print(paste0("The predicted probability of getting star 2 is:%", 100*round(pred[2],2)))
+  # print(paste0("The predicted probability of getting star 3 is:%", 100*round(pred[3],2)))
+  # print(paste0("The predicted probability of getting star 4 is:%", 100*round(pred[4],2)))
+  # print(paste0("The predicted probability of getting star 5 is:%", 100*round(pred[5],2)))
+  
+  return(pie(pie.prop, pie.labels, col=brewer.pal(5, "RdYlGn")))
+  #return(pred)
+}
+
+
+model_intp = function(BikeParking,RestaurantsGoodForGroups, WiFi,garage,valet, street,Total_hour,acceptable_noise,upscale_classy){
+  columns = c('OrderStar','comment_star','BikeParking','RestaurantsGoodForGroups','WiFi','garage','valet', 'street_parking','Total_hour','acceptable_noise','upscale_classy')
+  test_df = data.frame(matrix(nrow = 0, ncol = length(columns)))
+  colnames(test_df) = columns
+  
+
+  new_row = list('BikeParking' = BikeParking,'RestaurantsGoodForGroups' = RestaurantsGoodForGroups,'WiFi' = WiFi,
+            'garage' = garage,'valet' = valet, 'street_parking' = street,
+            'Total_hour' = Total_hour,'acceptable_noise' = acceptable_noise,
+            'upscale_classy' = upscale_classy)
+  
+  test_df = rbind(test_df,new_row)
+  test_df$BikeParking = as.factor(test_df$BikeParking)
+  test_df$RestaurantsGoodForGroups = as.factor(test_df$RestaurantsGoodForGroups)
+  test_df$WiFi = as.factor(test_df$WiFi)
+  test_df$garage = as.factor(test_df$garage)
+  test_df$valet = as.factor(test_df$valet)
+  test_df$street = as.factor(test_df$street)
+  test_df$acceptable_noise = as.factor(test_df$acceptable_noise)
+  test_df$upscale_classy = as.factor(test_df$upscale_classy)
+  
+  pred <- predict(model,test_df,type = "response")
+  return(pred)
+  
+}
+
+
+
 ```
 
 
@@ -270,23 +421,35 @@ ui = fluidPage(
        titlePanel('Restaurant name'),
        selectInput('category', 'Select business category', choice = unique(CA_Asian_business_review$general_category), multiple = TRUE),
        uiOutput('business_name'))
-      # selectInput('business_name','Select business name', choice = unique(CA_Asian_business_review$name)))
   ),
   
   mainPanel(
     tabsetPanel(
       tabPanel('Word Cloud', 
-       column(4,plotOutput('wordcloud_positive')), 
-       column(4,plotOutput('wordcloud_neutral')),
-       column(4,plotOutput('wordcloud_negative'))
+       column(4,plotOutput('wordcloud_positive'),
+        br(),
+        br(),
+        br(),), 
+       column(4,plotOutput('wordcloud_neutral'),
+        br(),
+        br(),
+        br(),),
+       column(4,plotOutput('wordcloud_negative'),
+        br(),
+        br(),
+        br(),),
+       textOutput('wordCloud_instruction'),
+        tags$head(br(),tags$style("#wordCloud_instruction{color: red;font-size: 13px;
+        font-style: bold;
+        }")),
       ),
       
     tabPanel('Text Frequency',
      column(2,numericInput('n_result','Top N view', value = 1, min = 1, max = 100)),
      column(2, numericInput('n_gram','length of text', value = 1, min = 1, max = 10)),
      column(2, selectInput('sentiment','Choose a sentiment', choice = unique(CA_Asian_business_review$sentiment))),
-     column(2, sliderInput('TF_font_size', label = 'Change font size', min =1, max = 50, value = 10)),
-      column(2, sliderInput('TF_rotation', label = 'Change label rotation', min =0, max = 180, value = 15)),
+     column(2, sliderInput('TF_font_size', label = 'font size', min =1, max = 50, value = 10)),
+      column(2, sliderInput('TF_rotation', label = 'Rotate label', min =0, max = 180, value = 15)),
      plotOutput('n_gram')
     ),
     
@@ -294,21 +457,63 @@ ui = fluidPage(
      column(2,numericInput('TI_N_result','Top N view', value = 1, min = 1, max = 50)),
      column(2,numericInput('TI_n_gram','length of text', value = 1, min = 1, max = 10)),
      column(2,selectInput('TI_sentiment','Choose a sentiment', choice = unique(CA_Asian_business_review$sentiment))),
-      column(2, sliderInput('TI_font_size', label = 'Change font size', min =1, max = 50, value = 10)),
-  column(2, sliderInput('TI_rotation', label = 'Change label rotation', min =0, max = 180, value = 15)),
+      column(2, sliderInput('TI_font_size', label = 'Font size', min =1, max = 50, value = 10)),
+  column(2, sliderInput('TI_rotation', label = 'Rotate label', min =0, max = 180, value = 15)),
      plotOutput('text_importance')
     ),
     
-    
     tabPanel('Parking map', includeHTML('parking.html')),
-    tabPanel('Feature modeling')
-    
+    tabPanel('Feature modeling',
+      column(4, selectInput('wifi','WIFI', choices =list(0,1)),
+             numericInput('total_hour','Total_opening_hour',value = 50,min = 1,max=168),
+             selectInput('good_for_group','Group Griendly', choices = list(0,1))), 
+      
+      column(4, selectInput('valet','Valet Parking', choices = list(0,1)),
+             selectInput('garage','Garage Parking', choices = list(0,1)),
+             selectInput('street_park','Street Parking', choices = list(0,1))),
+     
+      column(4, selectInput('noise','Noise level', choices = list(0,1)),
+             selectInput('upscale_classy','Upscale or Classy', choices = list(0,1)),
+             selectInput('bike_park','Bike Parking', choices = list(0,1))),
+      
+      fluidPage(
+        column(6, plotOutput('modeling')),
+        column(6,
+                br(),
+                br(),
+                br(),
+                br(),
+                br(),
+               htmlOutput('model_interpretation')
+               )
+      ),
+      br(),
+      br(),
+      br(),
+      textOutput('modeling_instruction'),
+      tags$head(tags$style("#modeling_instruction{color: red;font-size: 13px;
+      font-style: bold;
+      }")),
+          )
     )
   )
   
 )
 
 
+# ------------------ App virtualenv setup (Do not edit) ------------------- #
+# PYTHON_DEPENDENCIES = c('pip','pandas', 'numpy','matplotlib','collections','sklearn','plotly','sys','warnings','tqdm','seaborn','nltk',)
+# 
+# virtualenv_dir = Sys.getenv('VIRTUALENV_NAME')
+# python_path = Sys.getenv('PYTHON_PATH')
+# 
+# # Create virtual env and install dependencies
+# reticulate::virtualenv_create(envname = virtualenv_dir, python = python_path)
+# reticulate::virtualenv_install(virtualenv_dir, packages = PYTHON_DEPENDENCIES, ignore_installed=TRUE)
+# reticulate::use_virtualenv(virtualenv_dir, required = T)
+
+
+# ------------------ App server logic (Edit anything below) --------------- #
 server = function(input, output){
   
   output$business_name = renderUI({
@@ -350,13 +555,36 @@ server = function(input, output){
                    input$n_result,input$sentiment, input$TF_font_size, input$TF_rotation)
   })
   
-  output$parking_scatter = renderPlot(({
-    py$parking_scatter()
-  }))
-  
   output$text_importance = renderPlot({
-    py$tfidf_viz( input$business_name, input$TI_sentiment , input$TI_n_gram, input$TI_N_result, input$TI_font_size, input$TI_rotation)
+    py$tfidf_viz( input$business_name, input$TI_sentiment , input$TI_n_gram, input$TI_N_result, input$TI_font_size, input$TI_rotation, input$category)
   })
+  
+  output$modeling = renderPlot({
+    predict_model(input$bike_park,input$good_for_group,input$wifi,input$garage,input$valet, input$street_park,input$total_hour,input$noise,input$upscale_classy)
+  })
+  
+  
+  #------------------ Instruction text ------------------#
+  output$wordCloud_instruction = renderText({
+    'Hint: the more a specific word appears in a source of textual data, the bigger and bolder it appears in the word cloud'
+  })
+  
+  
+  output$modeling_instruction = renderText({
+    'Hint: 0 means you do not have the feature, 1 means you want this feature'
+  })
+  
+  output$model_interpretation = renderText({
+    pred = model_intp(input$bike_park,input$good_for_group,input$wifi,input$garage,input$valet, input$street_park,input$total_hour,input$noise,input$upscale_classy)
+    str1 = paste0("The predicted probability of getting star 1 is: ", 100*round(pred[1],2), '%')
+    str2 = paste0("The predicted probability of getting star 2 is: ", 100*round(pred[2],2), '%')
+    str3 = paste0("The predicted probability of getting star 3 is: ", 100*round(pred[3],2), '%')
+    str4 = paste0("The predicted probability of getting star 4 is: ", 100*round(pred[4],2), '%')
+    str5 = paste0("The predicted probability of getting star 5 is: ", 100*round(pred[5],2), '%')
+    HTML(paste(str1, str2, str3,str4, str5, sep = '<br/>'))
+  })
+  
+  
 }
 
 shinyApp(ui, server)
