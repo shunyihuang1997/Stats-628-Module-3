@@ -1,0 +1,64 @@
+---
+title: "EDA_category"
+author: "Yuqian Chen"
+date: "2022-11-28"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+````{r}
+library(VGAM)
+library(cdabookdb)
+library(cdabookfunc)
+library(tidyr)
+#library(openxlsx)
+library(stringr)
+library(splitTools)
+#library(dplyr)
+
+data = read.csv("final_data_category_1000.csv") 
+Y = data["comment_star"]
+factorY = factor(c(t(Y)))
+data$OrderStar = ordered(factorY,labels=c("1","2","3","4","5"))
+col_list = c(colnames(data))
+data[,c(1,6:16,18,19,20)] <- lapply(data[,c(1,6:16,18,19,20)], factor)
+
+data_Kor=subset.data.frame(data, data$general_category == "Korean" & data$Total_hour!=0)
+```
+
+```{r 90%}
+train90.rows <- sample(rownames(data_Kor), dim(data_Kor)[1]*0.8)
+train90 <- data_Kor[train90.rows,]
+
+test90.rows <- sample(rownames(data_Kor), dim(data_Kor)[1]*0.2)
+test90 <- data_Kor[test90.rows,]
+```
+
+```{r}
+m1 = vglm(OrderStar ~   
+            HasTV 
+          + WiFi 
+          + Total_hour 
+          #+ acceptable_noise 
+          ,family = cumulative(parallel = TRUE),data = train90)
+summary(m1)
+```
+
+
+
+```{r}
+X2 <- sum(resid(m1, type = "pearson") ^ 2)
+x2_pvalue <- 1- pchisq(X2, 20301)
+c(X2 = X2, pvalue = x2_pvalue)
+```
+
+```{r accuracy90}
+pred_prob11<- predict(m1, type = "response", newdata = test90 )
+predict.results1 <-as.numeric( colnames(pred_prob11)[apply(pred_prob11,1,which.max)])
+
+misClasificError <- mean(predict.results1 != test90$comment_star)
+print(paste('Accuracy',1-misClasificError))
+```
