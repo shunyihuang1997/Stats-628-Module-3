@@ -4,14 +4,14 @@ library(shinyjs)
 library(tidyverse)
 library(WVPlots)
 library(rsconnect)
-library(reticulate)
-library(wordcloud2)
-library(wordcloud)
+#library(reticulate)
 library(VGAM)
 library(tidyr)
 library(stringr)
 library(splitTools)
 library(RColorBrewer)
+library(plotly)
+library(DT)
 
 
 
@@ -256,6 +256,7 @@ model_intp = function(category, BikeParking,RestaurantsGoodForGroups, WiFi,garag
 #-------------------------------------------------- Shiny app ----------------------------------------------------#
 
 ui = fluidPage(
+
   titlePanel('Your customer review and satisfication analysis'),
   column(2,
          wellPanel(
@@ -266,51 +267,29 @@ ui = fluidPage(
   
   mainPanel(
     tabsetPanel(
-      tabPanel('Word Cloud',
-               column(4,plotOutput('wordcloud_positive'),
-                      br(),
-                      br(),
-                      br(),),
-               column(4,plotOutput('wordcloud_neutral'),
-                      br(),
-                      br(),
-                      br(),),
-               column(4,plotOutput('wordcloud_negative'),
-                      br(),
-                      br(),
-                      br(),),
-               textOutput('wordCloud_instruction'),
-               tags$head(br(),tags$style("#wordCloud_instruction{color: red;font-size: 13px;
-        font-style: bold;
-        }")),
-      ),
-      
-      tabPanel('Text Frequency',
+
+      tabPanel('Text Frequency Table',
                textOutput('ngram_hint'),
                tags$head(tags$style("#ngram_hint{color: red;
      font-size: 15px;font-style: bold;}")),
                br(),
                br(),
-               column(2,numericInput('n_result','Top N view', value = 1, min = 1, max = 100)),
-               column(2, numericInput('n_gram','length of text', value = 1, min = 1, max = 10)),
-               column(2, selectInput('sentiment','Choose a sentiment', choice = unique(CA_Asian_business_review$sentiment))),
-               column(2, sliderInput('TF_font_size', label = 'font size', min =1, max = 50, value = 10)),
-               column(2, sliderInput('TF_rotation', label = 'Rotate label', min =0, max = 180, value = 15)),
-               plotOutput('n_gram')
+               column(3,numericInput('n_result','Top N view', value = 1, min = 1, max = 100)),
+               column(3, numericInput('n_gram','length of text', value = 1, min = 1, max = 10)),
+               column(3, selectInput('sentiment','Choose a sentiment', choice = unique(CA_Asian_business_review$sentiment))),
+               dataTableOutput('n_gram_table')
       ),
       
-      tabPanel('Text Importance',
+      tabPanel('Text Importance Table',
                textOutput('tfidf_hint'),
                tags$head(tags$style("#tfidf_hint{color: red;
      font-size: 15px;font-style: bold;}")),
                br(),
                br(),
-               column(2,numericInput('TI_N_result','Top N view', value = 1, min = 1, max = 50)),
-               column(2,numericInput('TI_n_gram','length of text', value = 1, min = 1, max = 10)),
-               column(2,selectInput('TI_sentiment','Choose a sentiment', choice = unique(CA_Asian_business_review$sentiment))),
-               column(2, sliderInput('TI_font_size', label = 'Font size', min =1, max = 50, value = 10)),
-               column(2, sliderInput('TI_rotation', label = 'Rotate label', min =0, max = 180, value = 15)),
-               plotOutput('text_importance')
+               column(3,numericInput('TI_N_result','Top N view', value = 1, min = 1, max = 50)),
+               column(3,numericInput('TI_n_gram','length of text', value = 1, min = 1, max = 10)),
+               column(3,selectInput('TI_sentiment','Choose a sentiment', choice = unique(CA_Asian_business_review$sentiment))),
+               dataTableOutput('text_importance_table')
       ),
       
       tabPanel('Parking map', includeHTML('parking.html')),
@@ -371,18 +350,18 @@ ui = fluidPage(
 # ------------------ App server logic (Edit anything below) --------------- #
 server = function(input, output){
   
-  
+  #---------------------Initialize virtual env-----------------------#
   virtualenv_dir = Sys.getenv('VIRTUALENV_NAME')
   python_path = Sys.getenv('PYTHON_PATH')
   PYTHON_DEPENDENCIES = c('pandas','numpy','plotly','matplotlib','scikit-learn','tqdm','chardet','seaborn','nltk','textblob','wordcloud')
-  print(virtualenv_dir)
-  print(python_path)
-  
+
   # Create virtual env and install dependencies
   reticulate::virtualenv_create(envname = virtualenv_dir, python = python_path)
   reticulate::virtualenv_install(virtualenv_dir, packages = PYTHON_DEPENDENCIES, ignore_installed=TRUE)
-  reticulate::use_virtualenv(virtualenv_dir, required = F)
+  reticulate::use_virtualenv(virtualenv_dir, required = T)
   
+  
+  #Apply python function
   reticulate::source_python('py_fun.py')
   
 
@@ -398,37 +377,15 @@ server = function(input, output){
   })
   
   
-  output$wordcloud_positive = renderPlot({
-    cur_len = check_len('Positive',input$business_name)
-    if (cur_len > 0){
-      show_word_cloud('Positive',input$business_name)
-    }
-
-  })
-
-  output$wordcloud_neutral = renderPlot({
-    cur_len = check_len('Neutral',input$business_name)
-    if (cur_len > 0){
-      show_word_cloud('Neutral',input$business_name)
-    }
-
-  })
-
-  output$wordcloud_negative = renderPlot({
-    cur_len = check_len('Negative',input$business_name)
-    if (cur_len > 0){
-      show_word_cloud('Negative',input$business_name)
-    }
+  output$n_gram_table = renderDataTable({
+    n_gram_table(input$n_gram, input$business_name, input$n_result,input$sentiment)
   })
   
-  output$n_gram = renderPlot({
-    n_gram_plot(input$n_gram, input$business_name, 
-                   input$n_result,input$sentiment, input$TF_font_size, input$TF_rotation)
+  output$text_importance_table = renderDataTable({
+    tfidf_table(input$business_name,input$TI_sentiment, input$TI_n_gram, input$TI_N_result, input$category)
   })
+
   
-  output$text_importance = renderPlot({
-    tfidf_viz( input$business_name, input$TI_sentiment , input$TI_n_gram, input$TI_N_result, input$TI_font_size, input$TI_rotation, input$category)
-  })
   
   output$modeling = renderPlot({
     if(input_provided(input$category) == FALSE){
@@ -503,6 +460,7 @@ server = function(input, output){
     str5 = paste0("The predicted probability of getting star 5 is: ", 100*round(pred[5],2), '%')
     HTML(paste(str1, str2, str3,str4, str5, sep = '<br/>'))
   })
+  
   
   
 }

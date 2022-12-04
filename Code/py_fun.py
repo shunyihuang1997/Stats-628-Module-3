@@ -9,6 +9,8 @@ import chardet
 #from collections import Counter
 import seaborn as sns
 import matplotlib.pyplot as plt
+
+#import jinja2
 #import plotly.express as px
 
 from nltk.stem import WordNetLemmatizer
@@ -20,11 +22,11 @@ import textblob
 from collections import defaultdict
 from nltk.corpus import stopwords
 from nltk.tokenize import word_tokenize
-import re
+#import re
 from sklearn.linear_model import LogisticRegression
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import train_test_split
-import math
+#import math
 from nltk import bigrams,trigrams,ngrams
 #from collections import Counter
 from sklearn.metrics import confusion_matrix
@@ -51,17 +53,37 @@ def show_word_cloud(sentiment, business_name):
     for word in cur_list:
       word = word[2:-1]
       w_c += "".join(word)+ " "
-  print(w_c)
+  
   wordcloud_final = WordCloud(width = 800, height = 800, background_color ='white',min_font_size = 10, collocation_threshold = 3, min_word_length=3).generate(w_c)
   
-  plt.imshow(wordcloud_final)
+  
   plt.title(str(sentiment))
   plt.axis("off")
   plt.tight_layout(pad = 0)
+  plt.imshow(wordcloud_final)
   plt.show()
   
+ 
+# def test_wc(sentiment, business_name):
+#   new_df= CA_Asian_business_review[CA_Asian_business_review['sentiment'] == sentiment].reset_index(drop=True)
+#   new_df= new_df[new_df['name'] == business_name].reset_index(drop=True)
+#   w_c = ""
+#   for i in range(len(new_df)):
+#     cur_list = new_df.loc[i,'text_cleaned'].split(',')
+#     for word in cur_list:
+#       word = word[2:-1]
+#       w_c += "".join(word)+ " "
+#   return w_c
+   
+# def test_numpy(x,y):
+#   return(np.add(x,y))
   
   
+def test_plt():
+  x = np.arange(1,11)
+  y = 2*x+5
+  plt.plot(x,y)
+  plt.show()
   
 #--------------------------------- N gram plot ---------------------------------------#
 def check_len(sentiment, business_name):
@@ -88,10 +110,10 @@ def n_gram_plot(num_gram,business_name,num_result,sentiment, font, rotation):
     for word in generate_N_grams(cur_list,num_gram):
       word = word.replace("'",'')
       negative_dict[word] += 1
-          
-          
+
+
   df_negative = pd.DataFrame(sorted(negative_dict.items(), key = lambda x : x[1], reverse= True))
-  
+
 
   if sentiment == 'Positive':
     color = 'green'
@@ -109,6 +131,25 @@ def n_gram_plot(num_gram,business_name,num_result,sentiment, font, rotation):
   plt.yticks(fontsize = font)
   plt.show()
 
+
+
+
+def n_gram_table(num_gram,business_name,num_result,sentiment):
+  negative_dict = defaultdict(int)
+  new_df = CA_Asian_business_review[CA_Asian_business_review.sentiment == sentiment]
+  new_df = new_df[new_df.name == business_name]
+  for text in new_df.text_cleaned:
+    cur_list = text.split(",")
+    for word in generate_N_grams(cur_list,num_gram):
+      word = word.replace("'",'')
+      negative_dict[word] += 1
+
+
+  df_negative = pd.DataFrame(sorted(negative_dict.items(), key = lambda x : x[1], reverse= True))
+  final_df = pd.DataFrame.from_dict(df_negative)
+  final_df = final_df.rename(columns = {0:'text',1:'frequency'})
+  final_df = final_df.head(num_result)
+  return(final_df)
 
 
 
@@ -172,7 +213,7 @@ def tfidf_viz(business_name, sentiment, num_gram, top_n, font, rotation, categor
   spec_sent['TFIDF_text'] = [''.join(map(str,l)) for l in spec_sent.text_cleaned]
   transformed = tfidf.fit_transform(pd.Series(spec_sent.TFIDF_text))
   
-  temp_df = pd.DataFrame(transformed[0].T.todense(),index=tfidf.get_feature_names(), columns=["TF-IDF"])
+  temp_df = pd.DataFrame(transformed[0].T.todense(),index=tfidf.get_feature_names_out(), columns=["TF-IDF"])
   
   temp_df = temp_df.sort_values('TF-IDF', ascending=False)
   
@@ -197,13 +238,62 @@ def tfidf_viz(business_name, sentiment, num_gram, top_n, font, rotation, categor
           index_list.append(i)
   
   temp_df.drop(index_list,axis = 0, inplace=True)
-  
+  if sentiment == 'Positive':
+    color = 'green'
+  elif sentiment == 'Neutral':
+    color = 'yellow'
+  else:
+    color = 'red'
   
   temp_df = temp_df.head(top_n)
-  temp_df.plot(x = 'text', y = 'TF-IDF', kind = 'bar')
+  temp_df.plot(x = 'text', y = 'TF-IDF', kind = 'bar', color = color)
   plt.xticks(rotation = rotation,fontsize = font)
   plt.ylabel('TF-IDF Score')
   plt.show()
+
+
+
+
+
+def tfidf_table(business_name, sentiment, num_gram, top_n,category):
+  spec_restaurant = CA_Asian_business_review[CA_Asian_business_review['name'] == business_name]
+  spec_sent = spec_restaurant[spec_restaurant['sentiment'] == sentiment]
+  
+  tfidf = TfidfVectorizer(ngram_range=(num_gram,num_gram))
+  spec_sent['TFIDF_text'] = [''.join(map(str,l)) for l in spec_sent.text_cleaned]
+  transformed = tfidf.fit_transform(pd.Series(spec_sent.TFIDF_text))
+  
+  temp_df = pd.DataFrame(transformed[0].T.todense(),index=tfidf.get_feature_names_out(), columns=["TF-IDF"])
+  
+  temp_df = temp_df.sort_values('TF-IDF', ascending=False)
+  
+  temp_df = temp_df[temp_df['TF-IDF'] > 0].reset_index()
+  temp_df = temp_df.rename(columns= {'index':'text'})
+  
+  if category ==  'Chinese':
+    cur_list =new_Chinese_food_list
+  elif category == 'Japanese':
+    cur_list =new_Japanese_food_list
+  elif category == 'Korean':
+    cur_list =new_Korean_food_list
+  else:
+    cur_list = new_Chinese_food_list+new_Japanese_food_list+new_Korean_food_list
+  
+  
+  index_list = []
+  for i in range(len(temp_df)):
+      word = temp_df.loc[i,'text']
+      cur_word = word.split(' ')
+      if not any(elem in elem in cur_list for elem in cur_word):
+          index_list.append(i)
+  
+  temp_df.drop(index_list,axis = 0, inplace=True)
+  final_df = temp_df.head(top_n)
+  
+  return(final_df)
+  
+
+
 
 
 
