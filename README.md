@@ -18,7 +18,7 @@ final_dataxxx.csv are maniny used for modeling purposes<br />
 
 3.The data description file contains introduction of all the datasets <br />
 
-4.The Image folder contains two heatmaps of all features, and two htmls that were used in our shiny app
+4.The Image folder contains two heatmaps of all features, two htmls that were used in our shiny app, and four pngs that are used in .md file
 
 
 [Shiny Link](https://whvicc-shunyi-huang.shinyapps.io/upload_shiny/)
