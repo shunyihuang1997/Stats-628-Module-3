@@ -4,7 +4,7 @@ This is a project that we are working on to help business owner to improve their
 
 There are Five folders named as "Code", "Data", "Data Description", and "Pics". <br />
 
-###The Code folder contains files that were written using python or R. <br />
+<font size = '5'>The Code folder contains files that were written using python or R.<br />
 'file type conversion.ipynb' serves to turn Json file to CSV files <br />
 'Data Cleaning.ipynb' serves a general data cleaning purposes such as extracing information from Json/CSV file, clean up text data, adding new features, etc <br />
 'data_cleaning_for_models.ipynb' returns dataset for modeling purpose <br />
