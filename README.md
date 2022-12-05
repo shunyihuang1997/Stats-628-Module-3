@@ -12,10 +12,9 @@ The Code folder contains files that were written using python or R. <br />
 'app.R' is the main shiny app code, which will take use functions in the 'py_fun.py' <br />
 
 
-
-Inside the Data Work folder:
-CA_Asian_business_review.csv is mainly used for NLP and text analyzing pusposes
-final_dataxxx.csv are maniny used for modeling purposes
+Inside the Data Work folder:<br />
+CA_Asian_business_review.csv is mainly used for NLP and text analyzing pusposes<br />
+final_dataxxx.csv are maniny used for modeling purposes<br />
 
 The Image folder contains two heatmaps of all features, and two htmls that were used in our shiny app
 
