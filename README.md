@@ -20,3 +20,7 @@ The Image folder contains two heatmaps of all features, and two htmls that were 
 
 
 [Shiny Link](https://whvicc-shunyi-huang.shinyapps.io/upload_shiny/)
+![](./Pics/text_frequency.png)
+![](./Pics/text_importance.png)
+![](./Pics/cuisine_map.png)
+![](./Pics/model.png)
