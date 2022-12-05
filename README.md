@@ -2,7 +2,7 @@
 
 This is a project that we are working on to help business owner to improve their .
 
-There are Five folders named as "Code", "Data", "Data Description", "Pics ",and "packages". <br />
+There are Five folders named as "Code", "Data", "Data Description", and "Pics". <br />
 
 The Code folder contains files that were written using python or R. <br />
 'file type conversion.ipynb' serves to turn Json file to CSV files <br />
@@ -10,6 +10,7 @@ The Code folder contains files that were written using python or R. <br />
 'data_cleaning_for_models.ipynb' returns dataset for modeling purpose <br />
 'EDA_xxx.Rmd' are EDA code <br />
 'app.R' is the main shiny app code, which will take use functions in the 'py_fun.py' <br />
+
 
 
 Inside the Data Work folder:
