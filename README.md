@@ -21,7 +21,7 @@ final_dataxxx.csv are maniny used for modeling purposes<br />
 4).The Image folder contains two heatmaps of all features, two htmls that were used in our shiny app, and four pngs that are used in .md file <br />
 
 
-Setting up python virtual environment in shinyapps.io, please see this example [Setting virtual environment](https://github.com/ranikay/shiny-reticulate-app/blob/master/.Rprofile)<br />
+If you would like to set up python virtual environment in shinyapps.io, please see this example [Setting virtual environment](https://github.com/ranikay/shiny-reticulate-app/blob/master/.Rprofile)<br />
 
 
 [Shiny Link](https://whvicc-shunyi-huang.shinyapps.io/upload_shiny/)
