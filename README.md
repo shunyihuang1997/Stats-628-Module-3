@@ -27,5 +27,5 @@ If you would like to set up python virtual environment in shinyapps.io, please s
 [Shiny Link](https://whvicc-shunyi-huang.shinyapps.io/upload_shiny/)
 ![](./Pics/text_frequency.png)
 ![](./Pics/text_importance.png)
-![](./Pics/cuisine_map.png)
+![](./Pics/cuisine.png)
 ![](./Pics/model.png)
